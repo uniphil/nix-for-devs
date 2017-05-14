@@ -62,11 +62,93 @@ TODO
 
 ## Python
 
+`shell.nix`
+
+```nix
+with import <nixpkgs> {};
+with pkgs.python27Packages;
+
+stdenv.mkDerivation {
+  name = "python";
+
+  buildInputs = [
+    pip
+    python27Full
+    virtualenv
+  ];
+
+  shellHook = ''
+    SOURCE_DATE_EPOCH=$(date +%s)  # so that we can use python wheels
+    YELLOW='\033[1;33m'
+    NC="$(printf '\033[0m')"
+
+    echo -e "''${YELLOW}Creating python environment...''${NC}"
+    virtualenv --no-setuptools venv > /dev/null
+    export PATH=$PWD/venv/bin:$PATH > /dev/null
+    pip install -r requirements.txt > /dev/null
+  '';
+}
+```
+
+This expression sets up a python 2 environment, and installs any dependencies from `requirements.txt` with `pip` in a `virtualenv`.
+
+### OS library dependencies
+
+There is a `LD_LIBRARY_PATH` attribute for nix packages that can help python dependencies find the libraries they may need to complete installation. You generally need to format two pieces of information together: the path to the dependency in the nix store, and `/lib`.
+
+Usually this means you just need `LD_LIBRARY_PATH=${<NAME>}/lib`. However, sometimes nix packages divide up their outputs, with the `/lib` folder and its contents at their own path in the nix store. _Usually_, the output with `lib//` is called `out`, and can be used like `LD_LIBRARY_PATH=${<NAME>.out}/lib`.
+
+If you need to put more than on dependency into `LD_LIBRARY_PATH`, separte them with a colon `:`, like for `$PATH`.
+
+#### `geos` and `gdal`
+
+`shell.nix`
+
+```nix
+with import <nixpkgs> {};
+with pkgs.python27Packages;
+
+stdenv.mkDerivation {
+  name = "python";
+
+  buildInputs = [
+    gdal
+    geos
+    pip
+    python27Full
+    virtualenv
+  ];
+  
+  LD_LIBRARY_PATH="${geos}/lib:${gdal}/lib";
+
+  shellHook = ''
+    SOURCE_DATE_EPOCH=$(date +%s)  # so that we can use python wheels
+    YELLOW='\033[1;33m'
+    NC="$(printf '\033[0m')"
+
+    echo -e "''${YELLOW}Creating python environment...''${NC}"
+    virtualenv --no-setuptools venv > /dev/null
+    export PATH=$PWD/venv/bin:$PATH > /dev/null
+    pip install -r requirements.txt > /dev/null
+  '';
+}
+```
+
+
+#### zlib
+
 TODO
+
+
+#### sqlite3
+
+TODO
+
+---
 
 also, http://nixos.org/nixpkgs/manual/#using-python
 
 
 ## Rust
 
-TODO
+TODO: mozilla nix overlay for nightly
