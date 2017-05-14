@@ -35,6 +35,28 @@ Stuff I used to do with docker. TODO :)
 
 ## Node.js
 
+`shell.nix`
+
+```nix
+with import <nixpkgs> {};
+
+stdenv.mkDerivation {
+    name = "node";
+    buildInputs = [
+        nodejs
+    ];
+    shellHook = ''
+        export PATH="$PWD/node_modules/.bin/:$PATH"
+        npm install
+    '';
+}
+```
+
+The `node` build input sets up `node` and `npm` in the shell. The shell hook adds the `.bin/` folder to your `PATH`, so you can install node tools like `grunt` with `npm` without the `-g` flag. Finally, it automatically installs any dependencies found in `package.json`, if one exists. If you prefer to run `npm install` manually inside the shell, just delete that line from `shellHook`.
+
+
+### React native
+
 TODO
 
 
