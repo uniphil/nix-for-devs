@@ -52,7 +52,10 @@ stdenv.mkDerivation {
 }
 ```
 
-The `node` build input sets up `node` and `npm` in the shell. The shell hook adds the `.bin/` folder to your `PATH`, so you can install node command-line tools like `grunt` with `npm` without the `-g` flag. Finally, it automatically installs any dependencies found in `package.json`, if one exists. If you prefer to run `npm install` manually inside the shell, just delete that line from `shellHook`.
+The `nodejs` build input sets up `node` and `npm` in the shell.
+The shell hook adds the `.bin/` folder to your `PATH`, so you can install node command-line tools like `grunt` with `npm` without the `-g` flag.
+Finally, it automatically installs any dependencies found in `package.json`, if one exists.
+If you prefer to run `npm install` manually inside the shell, just delete that line from `shellHook`.
 
 
 ### React native
@@ -94,11 +97,13 @@ This expression sets up a python 2 environment, and installs any dependencies fr
 
 ### OS library dependencies
 
-There is a `LD_LIBRARY_PATH` attribute for nix packages that can help python dependencies find the libraries they may need to complete installation. You generally need to format two pieces of information together: the path to the dependency in the nix store, and `/lib`.
+There is a `LD_LIBRARY_PATH` attribute for nix packages that can help python dependencies find the libraries they may need to complete installation.
+You generally need to format two pieces of information together: the path to the dependency in the nix store, and `/lib`.
 
-Usually this means you just need `LD_LIBRARY_PATH=${<NAME>}/lib`. However, sometimes nix packages divide up their outputs, with the `/lib` folder and its contents at their own path in the nix store. _Usually_, the output with `lib//` is called `out`, and can be used like `LD_LIBRARY_PATH=${<NAME>.out}/lib`.
+Usually this means you just need `LD_LIBRARY_PATH=${<NAME>}/lib`.
+However, sometimes nix packages divide up their outputs, with the `/lib` folder and its contents at their own path in the nix store. _Usually_, the output with `lib//` is called `out`, and can be used like `LD_LIBRARY_PATH=${<NAME>.out}/lib`.
 
-If you need to put more than on dependency into `LD_LIBRARY_PATH`, separte them with a colon `:`, like for `$PATH`.
+If you need to put more than on dependency into `LD_LIBRARY_PATH`, separate them with a colon `:`, like for `$PATH`.
 
 #### `geos` and `gdal`
 
