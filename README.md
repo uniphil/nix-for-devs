@@ -60,7 +60,24 @@ If you prefer to run `npm install` manually inside the shell, just delete that l
 
 ### React native
 
-TODO
+`shell.nix`
+
+```nix
+with import <nixpkgs> {};
+
+stdenv.mkDerivation {
+    name = "node";
+    buildInputs = [
+        watchman
+    ];
+    shellHook = ''
+        export PATH="$PWD/node_modules/.bin/:$PATH"
+        npm i react-native-cli
+    '';
+}
+```
+
+TODO: problems and way more details
 
 
 ## Python
