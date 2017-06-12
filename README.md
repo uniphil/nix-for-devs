@@ -64,19 +64,119 @@ If you prefer to run `npm install` manually inside the shell, just delete that l
 ```nix
 with import <nixpkgs> {};
 
-stdenv.mkDerivation {
-    name = "node";
+let
+  jdk = openjdk;
+  node = nodejs-8_x;
+  sdk = androidenv.androidsdk {
+    platformVersions = [ "23" ];
+    abiVersions = [ "x86" ];
+    useGoogleAPIs = true;
+    useExtraSupportLibs = false;
+    useGooglePlayServices = false;
+  };
+  unpatched-sdk =
+    let version = "3859397";
+    in stdenv.mkDerivation {
+      name = "unpatched-sdk";
+      src = fetchzip {
+        url = "https://dl.google.com/android/repository/sdk-tools-linux-${version}.zip";
+        sha256 = "03vh2w1i7sjgsh91bpw40ryhwmz46rv8b9mp7xzg89zs18021plr";
+      };
+      installPhase = ''
+        mkdir -p $out
+        cp -r * $out/
+      '';
+      dontPatchELF = true;
+    };
+  run-android = pkgs.buildFHSUserEnv {
+    name = "run-android";
+    targetPkgs = (pkgs: [
+      node
+    ]);
+    profile = ''
+      export JAVA_HOME=${jdk.home}
+      export ANDROID_HOME=$PWD/.android
+      export PATH=$PWD/node_modules/.bin:$PATH
+    '';
+    runScript = "react-native run-android";
+  };
+in
+  stdenv.mkDerivation {
+    name = "react-native-android";
+    nativeBuildInputs = [
+      run-android
+    ];
     buildInputs = [
-        watchman
+      coreutils
+      node
+      sdk
+      unpatched-sdk
     ];
     shellHook = ''
-        export PATH="$PWD/node_modules/.bin/:$PATH"
-        npm i react-native-cli
+      export JAVA_HOME=${jdk}
+      export ANDROID_HOME=$PWD/.android/sdk
+      export PATH="$ANDROID_HOME/bin:$PWD/node_modules/.bin:$PATH"
+
+      if ! test -d .android ; then
+        echo doing hacky setup stuff:
+
+        echo "=> pull the sdk out of the nix store and into a writeable directory"
+        mkdir -p .android/sdk
+        cp -r ${unpatched-sdk}/* .android/sdk/
+
+        echo "=> don't track the sdk directory"
+        echo .android/ >> .gitignore
+
+        echo "=> get react-native-cli in here"
+        npm install --no-save react-native-cli
+
+        echo "=> set up react-native plugins... need an FHS env for... reasons."
+        cd .android/sdk
+          $PWD/bin/sdkmanager --update
+          echo "=> installing platform stuff (you'll need to accept a license in a second)..."
+          $PWD/bin/sdkmanager "platforms;android-23" "build-tools;23.0.1" "add-ons;addon-google_apis-google-23"
+        cd ../../
+      fi;
     '';
-}
+  }
 ```
 
-TODO: problems and way more details
+This one is super-hacky and requires usage instructions :(
+also probably only works on linux :/
+
+#### 1. Enter the environment
+
+```bash
+$ nix-shell
+[...lots of console spam the first time]
+[nix-shell:]$
+```
+
+#### 2. If you don't have an avd set up, make one
+
+```bash
+[nix-shell:]$ android create avd -t android-23 -b x86 -d "Nexus 5" -n nexus
+```
+
+That command seeme to create slightly screwy avds. I ran `$ android avd` and then hit `edit` and `save` without any changes on mine, which seems to fix it :/
+
+#### 3. Start the JS server and emulator
+
+Both commands block: either background then (add `&` at the end) to run in the same terminal, or open a terminal for each
+
+```bash
+[nix-shell:]$ npm start
+[nix-shell:]$ emulator -avd nexus
+```
+
+
+#### 4. Run it!
+
+```bash
+[nix-shell:]$ run-android
+```
+
+Note that this `run-android` is provided by [`shell.nix`](./shell.nix), and wraps the call to `react-native-cli`'s `react-native run-android` command in the FHS environment so that the build works.
 
 
 ## Python
