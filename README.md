@@ -56,6 +56,25 @@ The shell hook adds the `.bin/` folder to your `PATH`, so you can install node c
 Finally, it automatically installs any dependencies found in `package.json`, if one exists.
 If you prefer to run `npm install` manually inside the shell, just delete that line from `shellHook`.
 
+### Newer nodejs
+
+`shell.nix`
+
+```nix
+with import <nixpkgs> {};
+
+stdenv.mkDerivation {
+    name = "node";
+    buildInputs = [
+        nodejs-8_x
+    ];
+    shellHook = ''
+        export PATH="$PWD/node_modules/.bin/:$PATH"
+    '';
+}
+```
+
+Node versions are published as -<version>_x, so etg., `nodejs-7_x` and `nodejs-6_x` are also valid.
 
 ### React native
 
