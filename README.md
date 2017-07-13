@@ -6,7 +6,7 @@ it's not a goal to change a nodejs project to use nix instead of npm,
 but it is a goal to run npm projects without having to install any OS dependencies (including nodejs itself!).
 `nix-ops` and other super-cool nix tech are completely out of scope.
 
-Every solution should Work Today (TM).
+Every solution should work today.
 If something is broken, [open an issue!](https://github.com/uniphil/nix-for-devs/issues/new).
 If there is a better solution that will be supported by nix soon, we wait until it's released before mentioning it here (but don't hesitate to open a tracking issue!).
 
@@ -55,6 +55,21 @@ The `nodejs` build input sets up `node` and `npm` in the shell.
 The shell hook adds the `.bin/` folder to your `PATH`, so you can install node command-line tools like `grunt` with `npm` without the `-g` flag.
 Finally, it automatically installs any dependencies found in `package.json`, if one exists.
 If you prefer to run `npm install` manually inside the shell, just delete that line from `shellHook`.
+
+### `npm run <...>` shortcut
+
+It's handy to have an alias `run` for `npm run`, which makes the following two commands equivalent:
+
+```bash
+$ npm run watch:test
+$ run watch:test
+```
+
+You can add this to `shellHook`:
+
+```bash
+    alias run='npm run'
+```
 
 ### Newer nodejs
 
