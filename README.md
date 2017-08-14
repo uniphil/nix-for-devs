@@ -91,6 +91,41 @@ stdenv.mkDerivation {
 
 Node versions are published as -<version>_x, so etg., `nodejs-7_x` and `nodejs-6_x` are also valid.
 
+### View available npm scripts
+
+I use `jq` to quickly get a summary of all scripts defined in a package's `package.json` file:
+
+`shell.nix`
+
+```nix
+with import <nixpkgs> {};
+
+stdenv.mkDerivation {
+    name = "node";
+    buildInputs = [
+        jq
+        nodejs
+    ];
+    shellHook = ''
+        export PATH="$PWD/node_modules/.bin/:$PATH"
+        alias scripts='jq ".scripts" package.json'
+    '';
+}
+```
+
+This sets up an alias called `scripts`. Example output:
+
+```bash
+$ scripts
+{
+  "build": "babel --ignore __tests__,story.js -d lib/ src/",
+  "lint": "eslint *.js src/ storybook/",
+  "start": "start-storybook -p 9001 -c ./storybook/web",
+  "test": "jest --roots src --silent",
+  "test:watch": "jest --roots src --watch"
+}
+```
+
 ### React native
 
 `shell.nix`
